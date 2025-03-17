@@ -44,6 +44,17 @@ ggplot(df, aes(x = publish, fill = factor(low))) +
 # 2. Outcome Variation
 #########################
 
+# Emily spent time on this section.
+hist(df$publish) # Deciles are uniform
+hist(df$publish, breaks = 100) # Lots of grouping on individual values 
+sort(table(df$publish))
+# Specific top values: 
+# 35  72  29  55  61  85  15 100  25  81  65  71   5  75  90  10  60  40  80  20  30  70  50 
+# 19  19  21  22  23  23  25  26  32  36  38  38  39  43  66  92  98 108 113 118 126 130 153
+# Bunching on some of these values is a bit odd. Suppose anything within +-2 of a 5 or 0 ending is suppose to be those endings. Could be people using heuristics of 5 and 10 when numbering. And people are avoiding certain decisions (0 or 100). So no evidence of censoring. 
+
+# TODO: 
+
 
 #########################
 # 3. Potential Data Issues
@@ -91,7 +102,7 @@ frequency_table <- table(df$intervals)
 print(frequency_table)
 hist(frequency_table, breaks = 50)
 
-# Tim# Tim# Time spent on vigenttees by treatment 
+# Time spent on vignettes by treatment 
 ggplot(subset(df, df$pagetime < 25000), aes(x = pagetime, fill = factor(low))) +
     geom_density(alpha = 0.5) +
     labs(title = "Density Plot of Time Spent on Vignettes by Treatment",
@@ -99,8 +110,6 @@ ggplot(subset(df, df$pagetime < 25000), aes(x = pagetime, fill = factor(low))) +
          y = "Density",
          fill = "Low") +
     theme_minimal()
-
-
 
 # 28 people did not finish the survey but are in the sample. If we remove them do the results change? 
 table(df$finished)
