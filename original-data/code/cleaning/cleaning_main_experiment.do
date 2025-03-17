@@ -190,14 +190,17 @@ foreach v of local treatments {
 * Redine list of outcomes to include importance 
 
 local outcomes publish qualityfob qualitysob importancefob importancesob   
-
 order `outcomes'
+
+di "`outcomes'"
 
 * Create z-scored variables
 foreach var in `outcomes' {
 	capture drop z_`var'
 	qui summ `var' if low==0
 	qui gen z_`var' = (`var' - r(mean)) / r(sd)
+	
+	summ z_`var'
 }
 
 * study id

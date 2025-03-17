@@ -4,6 +4,13 @@ Paper: The Null Result Penalty
 - Replication Packet: https://zenodo.org/records/8168773
 - Pre-registration: https://aspredicted.org/su6dj.pdf
 
+
+Division of Labor: 
+- Emily: Dependent variable variation
+- Ryan: Sample composition
+
+
+
 UMN Replication Games: 
 - Mar. 17th, 2025 at University of Minnesota
 - Thank Derek Mikola and Moin Syed as hosts for the replication game
@@ -12,18 +19,46 @@ UMN Replication Games:
 Pre-registration Details: 
 
 
-
 Reproduction Notes: 
 - Do the multi-researcher reproduction process like my past papers. 
 - Add control means to Table 3 (main reproduction table)
 - Table 3 and Figure 2 are the main reproductions
 - README says some data is not publicly avaliable: CV data
 - Good README. Seems to be using a template
+- Need to time the replication code.
+- Why standardize the secondary outcomes but not the primary outcome (publish)
+- Note how the reproduction works. We don't have all the additional data we might want to explore further. 
+- But that the effect sizes are massive. The data is clean. And remains a bit too good to be true. 
+
+
+
+
 
 Coding Issues: 
 - calculate_weights.R
 	- base_path is determined on line 9, but this is cleared on line 16 with rm(list=ls()). This leads to a failure of line 38. Easy change would be to move line 16 above line 9. 
+- In cleaning code, what is happening on line 126: 
+clonevar importancefob = qualityfob 
+clonevar importancesob = qualitysob 
 
+- In the paper, they say these are p.p. changes. But I think they were standardized relative to control distribution. So I think these are actually SD changes. lin 192 in cleaning code 
+local outcomes publish qualityfob qualitysob importancefob importancesob   
+
+order `outcomes'
+
+* Create z-scored variables
+foreach var in `outcomes' {
+	capture drop z_`var'
+	qui summ `var' if low==0
+	qui gen z_`var' = (`var' - r(mean)) / r(sd)
+}
+
+- Coding error in cleaning. Line 192. local is not standardizing values: 
+local outcomes publish qualityfob qualitysob importancefob importancesob 
+
+
+- Compare the sliding scale for publish against other qualtric slding scale measures. The bunching is suspicious. 
+- Bunching around certain numbers
 
 Robustness Checks: 
 - Attempt addressing analytical decision making process. 
@@ -31,10 +66,25 @@ Robustness Checks:
 - This is similar to my education replication 
 - Wild clustered bootstrapped errors. Check they are HC3 given effective cluster sample size is 40 -- so a small sample to determine the distribution.
 	- Might need to do the HC3 (HC1, H2) in R. Stata seems to have an issue here. 
-	= RYAN
+	= RYAN (DONE)
 - Potentially changing the weighting scheme. 
 - Table A.2 and A.3 and A.6
 - Data seuthing = Emily
 - Maybe do MHT corrections. Seems like a lot of regressions (could count them) for main outcome and secondary outcome with Null treatment and cross-randomizing treatments
-	- 
+	- (ALREADY DONE)
 - Publish at research nodes in PA
+
+- Could try ot bootstrap the beta coefficents and se -- this would check if estimates are senstive to sample composition. 
+- Estimates are a LPM. Could try to estimate the effects with probit or logit...
+	- Can't do this because continum 0 to 100. Not 0/1
+- Re-run controling for duration/pagetime effects (some long tails)
+- Re-run removing those who did not finish. 
+
+- Look at balance on the author's sample selection. In main study cleaning, line 66. 
+drop if missing(publish_meraid) & missing(publish_equsha) & missing(publish_salpov) & missing(publish_fememp) & missing(publish_finlit) 
+- There are variables on characteristics. So can run a simple balance table on these characteristics. 
+- Again looking at balance on the number of people who complete all 4 vigenettes. Line 75 
+keep if count==4 
+
+- Add a proposentiy score matching to see if the effects blow up. Construct a reasonable countrefactual on observables is the effect size reasonable 
+- Want to  match treatment and control groups to get individual level effects. Then average the effect. Closer to synthetic control 

@@ -1,7 +1,6 @@
 # Description: Re-analysis of Table 3 testing the standard errors 
 # Table of Contents: 
-# 1. Original Table 3 - HC1
-# 2. 
+# 1. Original Table 3 - Change HC Formula
 
 
 #########################
@@ -26,7 +25,7 @@ path_out = "D:/umn_replication/outputs/" # output folder
 df <- import(path_data)
 
 #########################
-# 1. Original Table 3 - HC1
+# 1. Original Table 3 - HC Change
 #########################
 
 # ORIGINAL STATA CODE: 
@@ -43,22 +42,32 @@ df <- import(path_data)
 #     eststo `var': reghdfe `var' i.($treatments),  absorb(vignette) vce(cluster id)
 # }
 
-treatments <- c("low", "exlow", "exhigh", "field", "phd", "unilow", "pval")
-outcomes <- c("publish", "z_qualityfob", "z_qualitysob", "z_importancefob", "z_importancesob")
+# treatments <- c("low", "exlow", "exhigh", "field", "phd", "unilow", "pval")
+# outcomes <- c("publish", "z_qualityfob", "z_qualitysob", "z_importancefob", "z_importancesob")
 
 # Column 1
 col1 <- plm(publish ~ low + exlow + exhigh + field + phd + unilow + pval, 
                 data = df,
                 index = c("id", "vignette"), 
                 model = "within")
-col1_se <- sqrt(diag(vcovHC(col1, type = "HC1")))
+col1_se <- sqrt(diag(vcovHC(col1, type = "HC1", cluser = "id")))
+df_control <- subset(df, df$low == 0)
+col1_mean <- round(mean(df_control$publish), 3) # Subset for control
+
+# Adjusted Standard errors with other forumlas
+col1_hc2 <- sqrt(diag(vcovHC(col1, type = "HC2", cluser = "id")))
+col1_hc3 <- sqrt(diag(vcovHC(col1, type = "HC3", cluser = "id")))
+
 
 # Check
-stargazer(col1,
+stargazer(col1, col1, col1,
           type = "text", 
           keep = c(1),
           covariate.labels = c("Null result treatment"),
-          se = list(col1_se), 
+          column.labels = c("HC1", "HC2", "HC3"),
+          se = list(col1_se, col1_hc2, col1_hc3), 
           keep.stat = c("n", "adj.rsq"),
           model.numbers = TRUE,
-          digits = 3) 
+          digits = 3, 
+          add.lines = list(c("Mean Dep. Var.", col1_mean, col1_mean, col1_mean)
+                           )) 
