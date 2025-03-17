@@ -10,12 +10,12 @@ use "${data_folder}/main_study_cleaned.dta", clear
 eststo clear 
 
 foreach x of varlist male phdstudent evereditor highcite anytop5 {
-eststo publish_`x'1: qui reghdfe publish i.low i.($crosstreatments) if `x'==1, absorb(id) vce(cluster id)
-eststo qualityfob_`x'1: qui reghdfe qualityfob i.low i.($crosstreatments) if `x'==1, absorb(id) vce(cluster id)
-eststo importancefob_`x'1: qui reghdfe importancefob i.low i.($crosstreatments) if `x'==1, absorb(id) vce(cluster id)
-eststo publish_`x'0: qui reghdfe publish i.low i.($crosstreatments) if `x'==0, absorb(id) vce(cluster id)
-eststo qualityfob_`x'0: qui reghdfe qualityfob i.low i.($crosstreatments) if `x'==0, absorb(id) vce(cluster id)
-eststo importancefob_`x'0: qui reghdfe importancefob i.low i.($crosstreatments) if `x'==0, absorb(id) vce(cluster id)
+	eststo publish_`x'1: qui reghdfe publish i.low i.($crosstreatments) if `x'==1, absorb(id) vce(cluster id)
+	eststo qualityfob_`x'1: qui reghdfe qualityfob i.low i.($crosstreatments) if `x'==1, absorb(id) vce(cluster id)
+	eststo importancefob_`x'1: qui reghdfe importancefob i.low i.($crosstreatments) if `x'==1, absorb(id) vce(cluster id)
+	eststo publish_`x'0: qui reghdfe publish i.low i.($crosstreatments) if `x'==0, absorb(id) vce(cluster id)
+	eststo qualityfob_`x'0: qui reghdfe qualityfob i.low i.($crosstreatments) if `x'==0, absorb(id) vce(cluster id)
+	eststo importancefob_`x'0: qui reghdfe importancefob i.low i.($crosstreatments) if `x'==0, absorb(id) vce(cluster id)
 }		
 
 		   

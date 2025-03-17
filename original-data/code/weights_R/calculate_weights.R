@@ -6,7 +6,7 @@
 ############################################################
 ### USER INPUT: SET THE PATH HERE TO MATCH YOUR MACHINE ####
 ############################################################
-base_path = "/Users/fch/Library/CloudStorage/Dropbox/Projects/Null Bias/20221114_Replication_nullresultpenalty_revised/03 replication package"
+base_path = "D:/umn_replication/original-data"
 
 
 ##################################################

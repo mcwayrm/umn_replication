@@ -17,6 +17,13 @@ Reproduction Notes:
 - Do the multi-researcher reproduction process like my past papers. 
 - Add control means to Table 3 (main reproduction table)
 - Table 3 and Figure 2 are the main reproductions
+- README says some data is not publicly avaliable: CV data
+- Good README. Seems to be using a template
+
+Coding Issues: 
+- calculate_weights.R
+	- base_path is determined on line 9, but this is cleared on line 16 with rm(list=ls()). This leads to a failure of line 38. Easy change would be to move line 16 above line 9. 
+
 
 Robustness Checks: 
 - Attempt addressing analytical decision making process. 
@@ -29,6 +36,5 @@ Robustness Checks:
 - Table A.2 and A.3 and A.6
 - Data seuthing = Emily
 - Maybe do MHT corrections. Seems like a lot of regressions (could count them) for main outcome and secondary outcome with Null treatment and cross-randomizing treatments
-- Make a github for this project. Send invite to all of you
-- Set up overleaf
+	- 
 - Publish at research nodes in PA

@@ -14,18 +14,12 @@ set cformat %5.3f
 * -------------           Paths for each user                   ----------------
 
 * USER INPUT: Set your user name here and the path to the root of the replication package
-if "$user" == "YOUR_USER_NAME_HERE"{
-	global dirpath "PATH_TO_ROOT_OF_REPLICATION_PACKAGE"		
+if "$user" == "ryanm"{
+	global dirpath "D:\umn_replication\original-data"		
 }
+// Hard coded so I can use the external hard-drive 
+global dirpath "D:\umn_replication\original-data"
 
-* Here is an example for Windows and Mac users:
-if "$user" == "C:\Users\s11378"{
-	global dirpath "C:\Users\s11378\Dropbox\Null Bias\20221114_Replication_nullresultpenalty\3 replication package"		
-}
-
-if "$user" == "/Users/fch"{
-	global dirpath "/Users/fch/Library/CloudStorage/Dropbox/Projects/Null Bias/20221114_Replication_nullresultpenalty_revised/3 replication package"		
-}
 * -------------           Common paths                   ---------------------------
 
 * processed data folder

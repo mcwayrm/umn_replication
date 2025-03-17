@@ -43,7 +43,7 @@ esttab * using "${table_folder}/`table'", replace  se ///
 
 eststo clear 
 foreach var of varlist `outcomes' { 
-eststo `var': reghdfe `var' i.($treatments),  absorb(vignette) vce(cluster id)
+	eststo `var': reghdfe `var' i.($treatments),  absorb(vignette) vce(cluster id)
 }
 
 esttab * using "${table_folder}/`table'", append se /// 
