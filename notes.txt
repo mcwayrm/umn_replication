@@ -88,3 +88,9 @@ keep if count==4
 
 - Add a proposentiy score matching to see if the effects blow up. Construct a reasonable countrefactual on observables is the effect size reasonable 
 - Want to  match treatment and control groups to get individual level effects. Then average the effect. Closer to synthetic control 
+
+
+- Quantile effects by every 5/10 percents. 
+- If the effects are the same at each level, then we uniform effects
+- Break out the histogram of slider selction split by treatment assignment. 
+- Could do this as 100 - score for control. This would map systemtric onto eachother with the small skews. 
