@@ -10,6 +10,9 @@ format: pdf
 
 ```{r}
 #| echo: false
+#| label: preamble
+#| error: false
+#| warning: false
 
 #########################
 # Preamble
@@ -64,6 +67,10 @@ Figure 2 estimates the interaction effect of the null effect with the cross-rand
 Below we represent a reproduction of the main estimate -- Column 1 of Table 3. 
 
 ```{r}
+#| label: reproduced
+#| error: false
+#| warning: false
+
 # Column 1
 col1 <- plm(publish ~ low + exlow + exhigh + field + phd + unilow + pval, 
                 data = df,
@@ -106,6 +113,10 @@ The first thing that is strange is that the outcome measure appears to be unifor
 Without binning, we also see that there is some grouping around divisors of 5 along the sliding scale used by respondents. 
 
 ```{r}
+#| label: hist-DV
+#| error: false
+#| warning: false
+
 # Suspiciously uniform
 hist(df$publish, breaks = 10)
 # Bunching around specific values
@@ -116,6 +127,11 @@ We notice something strange when we examine the distribution of the outcome meas
 Notably, the control and treatment distributions look like mirrors of one another. 
 
 ```{r}
+#| label: DV-by-treat
+#| error: false
+#| warning: false
+
+
 # Publish by treatment
 ggplot(df, aes(x = publish, fill = factor(low))) +
     geom_density(alpha = 0.5) +
@@ -141,6 +157,11 @@ $$
 
 
 ```{r}
+#| label: hist-overlay
+#| error: false
+#| warning: false
+
+
 # Histogram overlaying control onto treatment
 df2 <- data.table::copy(df)
 df2[, publish := ifelse(low == 1, publish, 100 - publish)]
@@ -171,6 +192,11 @@ In a uniform distribution, that means that rather than a 2/6 chance of selection
 The increased likelihood should apply similiarly to the Beta distribution. 
 
 ```{r}
+#| label: hist-recode
+#| error: false
+#| warning: false
+
+
 # Recode values within bandwidth 
 df = df[, publish := fifelse(publish %% 5 == 0, publish,
                 fifelse(publish %% 5 == 1, publish - 1,
@@ -206,33 +232,50 @@ Content to add here Emily:
 - Derek might need to remind me of the motivation here...
 
 ```{r}
+#| label: quant-regs 
+#| error: false
+#| warning: false
+
+
 # Quantile Regression: 
     # Tau is quantile: Repeat for 0.1 to 0.9.
-q_05 <- rq(publish ~ low + exlow + exhigh + field + phd + unilow + pval + 
-                            as.factor(id) + as.factor(vignette), 
-                   data = df, 
-                   tau = 0.5)
-q05_se <- sqrt(diag(vcovHC(q_05, type = "HC1", cluser = "id")))
-    # TODO: Issue with quantile regression with FE 
-    # TODO: Do for other values 
+taus <- seq(from = .1, to = .9, by = 0.1) # Range of quantiles
+quant_all  <- rq(publish ~ low + exlow + exhigh + field + phd + unilow + pval + id + vignette, 
+                tau = taus, 
+                data = df)
 
-# Present 
-stargazer(col1,
-        type = "text", 
-        keep = c(1),
-        covariate.labels = c("Null result treatment"),
-        se = list(col1_se), 
-        keep.stat = c("n", "adj.rsq"),
-        model.numbers = TRUE,
-        digits = 3, 
-        add.lines = list(c("Mean Dep. Var.", col1_mean)
-        )) 
-# Summarize the results
-summary(quantile_reg)
+print(quant_all$coef)
+print(quant_all$coef[2,])
+# NOTE: So there is variation over the quantiles... good sign
+
+# q01_se <- sqrt(diag(vcovHC(q_05, type = "HC1", cluser = "id")))
+#     # TODO: Issue with quantile regression with FE 
+#     # TODO: Do for other values 
+
+# # Present 
+# stargazer(col1,
+#         type = "text", 
+#         keep = c(1),
+#         covariate.labels = c("Null result treatment"),
+#         se = list(col1_se), 
+#         keep.stat = c("n", "adj.rsq"),
+#         model.numbers = TRUE,
+#         digits = 3, 
+#         add.lines = list(c("Mean Dep. Var.", col1_mean)
+#         )) 
+# # Summarize the results
+# summary(quantile_reg)
 ```
 
 
 ```{r}
+#| label: quant_plots
+#| error: false
+#| warning: false
+
+# TODO: Need to recover the SE to create CI for the plots. 
+
+
 # Plot the quantile regressions 
 # plot_models(ols, quant_reg_med, quant_reg_first, quant_reg_last,
 #            show.values = TRUE,
@@ -241,6 +284,8 @@ summary(quantile_reg)
 #                        legend.title = "Model")
 #            )
 ```
+
+
 # Propensity Score Matching 
 
 - Ryan/Derek...
