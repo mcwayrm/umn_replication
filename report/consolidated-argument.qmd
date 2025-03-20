@@ -219,6 +219,12 @@ Content to add here Emily:
 - Details on distribution from other slider bars. In particular if we could get some that are from other studies predicting things on a slider from 0 to 100. 
 - The empircal tests: kolmogorov Smirnov test 
 
+
+# Variation in Secondary Outcomes 
+
+- Similar historgrams for the other 4 variables before they are turned into z scores. 
+- Split by null treatment and test
+
 # Sample Composition 
 
 - Ryan
