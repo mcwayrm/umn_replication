@@ -39,24 +39,92 @@ data <- reshape(data, idvar="id", timevar="vignette", direction="wide")
 head(data)
 cor(data$publish.5, data$publish.3, use="complete.obs")
 
+plot(data$id, data$publish.1)
+
 
 
 hist(cleanedData$pagetime[cleanedData$pagetime<600])
 
 
 
-
-
+# one of the five papers you should not find an effect
 
 
 
 
 ks.test(data$publish.1, data$publish.2)
 
+ks.test(cleanedData$publish[cleanedData$low==1], cleanedData$publish[cleanedData$low==0])
+ks.test(cleanedData$publish[cleanedData$low==1], (100-cleanedData$publish[cleanedData$low==0]))
+qqplot(cleanedData$publish[cleanedData$low==1], (100-cleanedData$publish[cleanedData$low==0]))
 
 
 elk <- read.csv("~/GitHub/umn_replication/R/NullPenalty/emilySampleData.csv")
 hist(elk$pctworkers_1, breaks=100)
+
+
+
+
+colMeans(data, na.rm=T)
+
+
+
+anes <- read.csv("~/GitHub/umn_replication/R/NullPenalty/anes2020Race.csv")
+
+
+
+hist(anes$V202147[anes$V202147 %in% 0:100], breaks=100)
+hist(anes$V202173[anes$V202173 %in% 0:100], breaks=100)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+model1 <- lm(publish ~ low +
+                  pval + field + unilow + professor + exlow + exhigh
+                , data=cleanedData[cleanedData$vignette==1,])
+summary(model1)
+
+
+model2 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==2,])
+summary(model2)
+
+
+model3 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==3,])
+summary(model3)
+
+
+model4 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==4,])
+summary(model4)
+
+
+model5 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==5,])
+summary(model5)
+
+
+
+
 
 
 
