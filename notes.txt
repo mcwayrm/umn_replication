@@ -94,3 +94,21 @@ keep if count==4
 - If the effects are the same at each level, then we uniform effects
 - Break out the histogram of slider selction split by treatment assignment. 
 - Could do this as 100 - score for control. This would map systemtric onto eachother with the small skews. 
+
+
+NOTE FROM ABEL AND DEREK: 
+Null Result: 
+	- Look for patterns in the data as they are presented
+	- Look for duplicates of variables (overlaps). Why are people responding 75 in a raw for publish
+	- Clusters of respondents
+	- Check the mirror effect for each paper (vigenette) independtly
+	- For quantile, a bit odd that they are all in the same direction.
+	- Robusntess check, (a bit ridiculous) randomly drop the vigenettes -- subsamples. By randominess, we should expect null effect once in a while. A bit too good to be true. 
+	- Read an old version of this paper before publication. Design, results changing. 
+
+From a recent I4R report I cowrote: "The average t-statistic for treatment effects in Siddique et al. (2024a) is 32.9, and every single estimate has a t-value > 12. The results are clear outliers when compared to RCTs across multiple fields,20 and remain so when we compare them directly to RCTs previously published in top 25 economics
+journals in the period 2015-2018: the average z-statistics in the other economics
+studies was 3.97 – with only 1% of papers reporting average z-statistics above 20
+(Brodeur et al. 2020)" "Only 0.35% of the 186,822 estimates in the Cochrane Database of Systematic Reviews (Schwab
+2020) have a t-statistic above 12, and only 4 of around 35,000 RCT studies in the database have an average t-statistic above 34"
+See report here (text from conclusion): https://osf.io/c3k6f/files/osfstorage

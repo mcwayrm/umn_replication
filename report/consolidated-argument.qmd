@@ -65,6 +65,7 @@ As part of the reproduction, we identify Table 3 and Figure 2 has presenting the
 Table 3 is of primary interest as it estimates the null result effect on the primary outcome of interest and the secondary outcomes. 
 Figure 2 estimates the interaction effect of the null effect with the cross-randomized characteristics of the vigenettes. 
 Below we represent a reproduction of the main estimate -- Column 1 of Table 3. 
+In addition, we are able to reproduce all the results from the replication packet provided by the authors using the original Stata code. 
 
 ```{r}
 #| label: reproduced
@@ -222,8 +223,269 @@ Content to add here Emily:
 
 # Variation in Secondary Outcomes 
 
-- Similar historgrams for the other 4 variables before they are turned into z scores. 
-- Split by null treatment and test
+In brief, we do not find signs of potential manipulation for the the secondary outcomes like we do for the primary outcome for publication. We examine them through similar replication of Table 3 results and exploring histograms for the secondary outcomes. These histograms are presenting the opposite relationship that was found for the primary outcome. There is considerable overlap in the original distribution -- a more reasonable generated data set. Note that z-scores are what are estimated in the paper. So I present those histograms and then show esimates of Table 3 for the secondary outcomes before and after the z-score moditification. 
+
+- First order quality 
+
+```{r}
+#| label: 2nd-outcome-hist-1
+#| error: false
+#| warning: false
+
+# Original
+ggplot(df, aes(qualityfob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Fliped 
+df2[, qualityfob := ifelse(low == 1, qualityfob, 100 - qualityfob)]
+ggplot(df2, aes(qualityfob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Z-score
+ggplot(df, aes(z_qualityfob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge')
+```
+
+- Second order quality 
+
+```{r}
+#| label: 2nd-outcome-hist-2
+#| error: false
+#| warning: false
+
+# Original
+ggplot(df, aes(qualitysob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Fliped 
+df2[, qualitysob := ifelse(low == 1, qualitysob, 100 - qualitysob)]
+ggplot(df2, aes(qualitysob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Z-score
+ggplot(df, aes(z_qualitysob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge')
+```
+
+- First order importance
+
+```{r}
+#| label: 2nd-outcome-hist-3
+#| error: false
+#| warning: false
+
+# Original
+ggplot(df, aes(importancefob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Fliped 
+df2[, importancefob := ifelse(low == 1, importancefob, 100 - importancefob)]
+ggplot(df2, aes(importancefob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Z-score
+ggplot(df, aes(z_importancefob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge')
+```
+
+- Second order importance
+
+```{r}
+#| label: 2nd-outcome-hist-4
+#| error: false
+#| warning: false
+
+# Original
+ggplot(df, aes(importancesob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Fliped 
+df2[, importancesob := ifelse(low == 1, importancesob, 100 - importancesob)]
+ggplot(df2, aes(importancesob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+# Z-score
+ggplot(df, aes(z_importancesob, fill = as.factor(low))) + 
+    geom_histogram(alpha = 0.5, position = 'dodge')
+```
+
+
+This is the replication of Table 3 with the original z-score values. The values match very closely. But note that these are measured in standard deviations. A 0.3 or 0.4 standard deviation change is a massive effect size. 
+
+```{r}
+#| label: table3-2nd-outcomes
+#| error: false
+#| warning: false
+
+# Column 2
+col2 <- plm(z_qualityfob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col2_se <- sqrt(diag(vcovHC(col2, type = "HC1", cluser = "id")))
+    # TODO: Issue with adding clustering 
+# Column 3 
+col3 <- plm(z_qualitysob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col3_se <- sqrt(diag(vcovHC(col3, type = "HC1", cluser = "id")))
+# Column 4 
+col4 <- plm(z_importancefob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col4_se <- sqrt(diag(vcovHC(col4, type = "HC1", cluser = "id")))
+# Column 5 
+col5 <- plm(z_importancesob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col5_se <- sqrt(diag(vcovHC(col5, type = "HC1", cluser = "id")))
+
+# Means
+df_control <- subset(df, df$low == 0) # Subset for control
+col2_mean <- round(mean(df_control$z_qualityfob, na.rm = TRUE), 3) 
+col3_mean <- round(mean(df_control$z_qualitysob, na.rm = TRUE), 3) 
+col4_mean <- round(mean(df_control$z_importancefob, na.rm = TRUE), 3) 
+col5_mean <- round(mean(df_control$z_importancesob, na.rm = TRUE), 3) 
+
+# Present 
+stargazer(col2, col3, col4, col5,
+        type = "text", 
+        keep = c(1),
+        covariate.labels = c("Null result treatment"),
+        se = list(col2_se, col3_se, col4_se, col5_se), 
+        keep.stat = c("n", "adj.rsq"),
+        model.numbers = TRUE,
+        digits = 3, 
+        add.lines = list(c("Mean Dep. Var.", col2_mean, col3_mean, col4_mean, col5_mean)
+        )) 
+```
+
+
+Again, I replicate Table 3 but now with the original percentage point distribution (same units as Column 1 for primary outcome of interest). Again, the effect sizes are very statistically significant and large. But relative to the control group's dependent variable means, these effects are only shifting towards 50/50 decisions on measures of importance or quality for the paper. This is not flipping the decision as we see for the measure of publishability.
+
+```{r}
+#| label: table3-2nd-outcomes-noZ
+#| error: false
+#| warning: false
+
+# Column 2
+col2 <- plm(qualityfob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col2_se <- sqrt(diag(vcovHC(col2, type = "HC1", cluser = "id")))
+    # TODO: Issue with adding clustering 
+# Column 3 
+col3 <- plm(qualitysob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col3_se <- sqrt(diag(vcovHC(col3, type = "HC1", cluser = "id")))
+# Column 4 
+col4 <- plm(importancefob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col4_se <- sqrt(diag(vcovHC(col4, type = "HC1", cluser = "id")))
+# Column 5 
+col5 <- plm(importancesob ~ low + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col5_se <- sqrt(diag(vcovHC(col5, type = "HC1", cluser = "id")))
+
+# Means
+df_control <- subset(df, df$low == 0) # Subset for control
+col2_mean <- round(mean(df_control$qualityfob, na.rm = TRUE), 3) 
+col3_mean <- round(mean(df_control$qualitysob, na.rm = TRUE), 3) 
+col4_mean <- round(mean(df_control$importancefob, na.rm = TRUE), 3) 
+col5_mean <- round(mean(df_control$importancesob, na.rm = TRUE), 3) 
+
+# Present 
+stargazer(col2, col3, col4, col5,
+        type = "text", 
+        keep = c(1),
+        covariate.labels = c("Null result treatment"),
+        se = list(col2_se, col3_se, col4_se, col5_se), 
+        keep.stat = c("n", "adj.rsq"),
+        model.numbers = TRUE,
+        digits = 3, 
+        add.lines = list(c("Mean Dep. Var.", col2_mean, col3_mean, col4_mean, col5_mean)
+        )) 
+```
+
+
+# Salience of Treatment 
+
+The treatment for the null result treatment and the cross-randomized vigenette characteristics are presented through paragraphs the reviewer reads. These are short paragraphs. But some respondents take very little time or a very long time to respond to each vigenette. Therefore, we can use the time duration for each vigenette as a measure of salience that the respondent is (1) paying attention and (2) absorbing the treatment. For example, we show what the vigenettes look like to the participants (from the online appendix). 
+
+![Vigenette Example](../outputs/vigenette-example.png)
+
+First, I explore for outliers. I start by looking at the tails of the distribution. I note that there is a very long right tail in time. This suggests that some people open the survey, leave it in the background, and then come back to it. This is times at the vigenette level, not overall. So this ideally is not a measure of people not closing out of the survey. I examing times over 10,000 seconds (166 minutes). This is 5% of the sample. That is reasonable as 1 in 20 folks are getting distracted. But if I lower this to 2000 seconds (33 minutes), the proportion is 31% of the sample. This suggests that a large portion of the sample is take a very considerably long time to make a decision on the short paragraph above. This is not necessarily bad, it is just a bit suprising. On the other hand, I examine folks for whom they may not be examining the information closely. These are folks who read the paragraph perhaps too quickly, and by consequence are not recieving a salient treatment. About 20% of respondents are completing the vigenette section in under a minute. With seasoned eyes, perhaps that is reasonable. But it does suggest the respondents are just glossing over the information rather than reading carefully. If I restrict this to only 30 seconds, only 2.5% of the sample respondents are replying very quickly. What I find suspicious is how exact these values are for the lower measures. 
+
+
+If we explore the distribution (cutting off the long right tail at 2000 seconds -- removing 30% of the sample), we can see the influence of treatment as a salient effect and order effects of the vigenettes as the respodent learns (gets quicker) or gets bored (gets slower). The average is 177 seconds (3 minutes) to read the vigenette and respond. The treatment groups have considerable overlap. And the order effects show there is some learning to become quicker over time. 
+
+```{r}
+#| label: time-on-vigenettes
+#| error: false
+#| warning: false
+
+# Number of Observations in each tail of the distribution 
+time <- 10000 # 166.67 minutes
+num_above_threshold <- sum(df$pagetime > time) # n above threshold
+total_observations <- nrow(df) # n
+percent_above_threshold <- (num_above_threshold / total_observations) * 100 # percent
+percent_above_threshold # 5%
+print(paste0("Precentage of Vigenette Times Above ", time, " Seconds: ", format(percent_above_threshold, digits = 3)))
+
+time <- 2000 # 33 minutes
+num_above_threshold <- sum(df$pagetime > time) # n above threshold
+total_observations <- nrow(df) # n
+percent_above_threshold <- (num_above_threshold / total_observations) * 100 # percent
+percent_above_threshold # 31%
+print(paste0("Precentage of Vigenette Times Above ", time, " Seconds: ", format(percent_above_threshold, digits = 3)))
+
+time <- 60 # 1 minute
+num_above_threshold <- sum(df$pagetime < time) # n above threshold
+total_observations <- nrow(df) # n
+percent_above_threshold <- (num_above_threshold / total_observations) * 100 # percent
+percent_above_threshold # 20%
+print(paste0("Precentage of Vigenette Times Below ", time, " Seconds: ", format(percent_above_threshold, digits = 3)))
+
+time <- 30 # 1/2 minute
+num_above_threshold <- sum(df$pagetime < time) # n above threshold
+total_observations <- nrow(df) # n
+percent_above_threshold <- (num_above_threshold / total_observations) * 100 # percent
+percent_above_threshold # 2.5%
+print(paste0("Precentage of Vigenette Times Below ", time, " Seconds: ", format(percent_above_threshold, digits = 3)))
+
+# Overall Distribution
+ggplot(subset(df, df$pagetime < 2000), aes(x = pagetime)) +
+    geom_density(alpha = 0.5) +
+    labs(title = "Density Plot of Time Spent on Vigenettes",
+         x = "Seconds",
+         y = "Density",
+         fill = "Low") +
+    theme_minimal()
+
+# By Treatment Status
+ggplot(subset(df, df$pagetime < 2000), aes(x = pagetime, fill = factor(low))) +
+    geom_density(alpha = 0.5) +
+    labs(title = "Density Plot of Time Spent on Vigenettes",
+         x = "Seconds",
+         y = "Density",
+         fill = "Low") +
+    theme_minimal()
+
+# Order Effects
+ggplot(subset(df, df$pagetime < 2000), aes(x = pagetime, fill = factor(order))) +
+    geom_density(alpha = 0.5) +
+    labs(title = "Density Plot of Time Spent on Vigenettes",
+         x = "Seconds",
+         y = "Density",
+         fill = "Low") +
+    theme_minimal()
+```
+
+- Control and interaction effect of vigenette times for Table 3 
+
+- Create an abitrary cut off for short and long. Trim the data and re-estimate.
 
 # Sample Composition 
 
@@ -299,3 +561,20 @@ print(quant_all$coef[2,])
 - Do matching 
 - Estimated effect on matched pairs
 
+# Data Patterns
+
+- Plotting responds by their apperance in the data
+
+# P-curve and t-curve
+
+- Compare to the Cochrane or economics distribution of z-scores or t-scores 
+- https://www.aeaweb.org/articles?id=10.1257/aer.20190687
+- Note that the study is underpowered -- should expect to see null effects 
+
+- Do this for the presented results
+
+- Do this for the new estimated effects
+
+# Median is Static 
+
+- No matter the sample difference in each randomized group, it is almost always 50. 
