@@ -483,9 +483,84 @@ ggplot(subset(df, df$pagetime < 2000), aes(x = pagetime, fill = factor(order))) 
     theme_minimal()
 ```
 
-- Control and interaction effect of vigenette times for Table 3 
+When I include an interaction effect of the vigenette order with the null effect treatment, the treatment effect for the null result becomes larger. This is in line with the learning effect we observe in the histograms. There is no effect of order or the interaction effect though, which is a bit suprising.
+
+```{r}
+#| label: table-3-order-interaction
+#| error: false
+#| warning: false
+
+# Column 1
+df = df[, low_order := low*order]
+col1 <- plm(publish ~ low + order + low_order + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col1_se <- sqrt(diag(vcovHC(col1, type = "HC1", cluser = "id")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df, df$low == 0)
+col1_mean <- round(mean(df_control$publish), 3) # Subset for control
+# Present 
+stargazer(col1,
+        type = "text", 
+        keep = c(1, 2, 3),
+        covariate.labels = c("Null result treatment", "Vigenette Order", "Interaction"),
+        se = list(col1_se), 
+        keep.stat = c("n", "adj.rsq"),
+        model.numbers = TRUE,
+        digits = 3, 
+        add.lines = list(c("Mean Dep. Var.", col1_mean)
+        )) 
+```
 
 - Create an abitrary cut off for short and long. Trim the data and re-estimate.
+Finally we consider how the result would change if we windsorize the tails of the sample. Specifically for the observations that we believe are recieving a salient treatment. These are those answering within less than 30 seconds and those answering after 10,000 seconds. This represents 2.5% and 5% of the sample, respectively. Additionally, I use a data driven winsorizing approach replacing outliers in the bottom and top 5% of the distribution with the most extreme retained values at the 5% and 95% quantiles of the original distribution for publishability. Accounting for these outliers does not change the magnitude of the effect size. 
+
+```{r}
+#| label: table-3-winsorize
+#| error: false
+#| warning: false
+
+# Manual Trim
+df3 = data.table::copy(df)
+df3 = df3[pagetime > 30,]
+df3 = df3[pagetime < 10000,]
+# Re-estimate
+col1 <- plm(publish ~ low + + exlow + exhigh + field + phd + unilow + pval, 
+                data = df3,
+                index = c("id", "vignette"), 
+                model = "within")
+col1_se <- sqrt(diag(vcovHC(col1, type = "HC1", cluser = "id")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df3, df3$low == 0)
+col1_mean <- round(mean(df_control$publish), 3) # Subset for control
+
+# Automatic winsorizing 
+library(DescTools)
+df4 = data.table::copy(df)
+df4 = df4[, publish := Winsorize(publish, val = quantile(publish, probs = c(0.05, 0.95), na.rm = FALSE))]
+# Re-estimate
+col2 <- plm(publish ~ low + + exlow + exhigh + field + phd + unilow + pval, 
+                data = df4,
+                index = c("id", "vignette"), 
+                model = "within")
+col2_se <- sqrt(diag(vcovHC(col1, type = "HC1", cluser = "id")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df4, df4$low == 0)
+col2_mean <- round(mean(df_control$publish), 3) # Subset for control
+
+# Present 
+stargazer(col1, col2,
+        type = "text", 
+        keep = c(1),
+        covariate.labels = c("Null result treatment"),
+        se = list(col1_se, col2_se), 
+        keep.stat = c("n", "adj.rsq"),
+        model.numbers = TRUE,
+        digits = 3, 
+        add.lines = list(c("Mean Dep. Var.", col1_mean, col2_mean)
+        )) 
+```
 
 # Sample Composition 
 
