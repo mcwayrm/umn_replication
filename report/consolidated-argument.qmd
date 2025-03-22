@@ -562,6 +562,22 @@ stargazer(col1, col2,
         )) 
 ```
 
+
+# Data Patterns
+
+- Plotting responds by their apperance in the data
+
+# P-curve and t-curve
+
+- Compare to the Cochrane or economics distribution of z-scores or t-scores 
+- https://www.aeaweb.org/articles?id=10.1257/aer.20190687
+- Note that the study is underpowered -- should expect to see null effects 
+
+- Do this for the presented results
+
+- Do this for the new estimated effects
+
+
 # Sample Composition 
 
 - Ryan
@@ -629,27 +645,14 @@ print(quant_all$coef[2,])
 ```
 
 
-# Propensity Score Matching 
+# (Unlikely to Complete) Propensity Score Matching 
 
 - Ryan/Derek...
 - Create Propensity scores with logit 
 - Do matching 
 - Estimated effect on matched pairs
 
-# Data Patterns
 
-- Plotting responds by their apperance in the data
-
-# P-curve and t-curve
-
-- Compare to the Cochrane or economics distribution of z-scores or t-scores 
-- https://www.aeaweb.org/articles?id=10.1257/aer.20190687
-- Note that the study is underpowered -- should expect to see null effects 
-
-- Do this for the presented results
-
-- Do this for the new estimated effects
-
-# Median is Static 
+# (Minor) Median is Static 
 
 - No matter the sample difference in each randomized group, it is almost always 50. 
