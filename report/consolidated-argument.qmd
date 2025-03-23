@@ -96,14 +96,167 @@ stargazer(col1,
 
 We examine this in a couple of ways in particular. 
 
-1. Variation in the dependent variable
-2. Sample composition 
-3. Quantile Regressions 
-4. Propensity score matching 
+1. Z-curve is off the chart in comparision to other RCT publications in economics
+2. Variation in the dependent variable is strange
+3. Contrasted to secondary outcomes, appears more strange
+4. Sample composition (Maybe as robustness check)
 
 The motivation for these robustness checks are to stress test the results in examining if there is potential data manipulation that ensures statistical significance. 
 Our current results suggest that the data is unlikely to have been generated from real world data. 
 The recommendation of this replication is that Chopra et al. (2023) should be replicated using new data with an independent team of researchers. 
+
+
+# Z-curve
+
+NOTE: Worth discussing 
+
+The results of this study are very robust. The very large t-statistics are driving the results. For an RCT, we would not expect the results to be so robust. In fact, this article appears to be a gold mine for statistical significance. If we compare this to the distribution of RCT z-scores found in economics by Brodeur et al. (2020), we note that the z-scores in this study are far on the right tail (https://www.aeaweb.org/articles?id=10.1257/aer.20190687). In expecation, we should rarely find that the treatment effects are so statistically significant. Further, the authors note the ex-post power calculation that suggests that this study is underpowered to detect a measurable effect. And yet, each robustness check confirms a large and statistically significant effect. 
+
+
+![RCT Z-curve in Economics](../outputs/brouder-2020-z-curve.png)
+
+
+To compare the statitical significance of this study to RCTs reported in top economics journals, we display two z-curves. The first is the z-curve for reported results in the main study and the online appendix (delimited as two curves). And the second is a z-curve with the results from our replication robustness checks. To do this, I take the ratio of the point estimate (beta) to the variation in the estimate (standard) error to approximate the t-statistic. I will focus specifically on the pre-specified primary outcome of interest: publishability. 
+
+
+```{r}
+#| label: z-curve-main
+#| error: false
+#| warning: false
+
+# Create main paper list of values 
+df_main_values <- data.frame(
+    table = c(3,3,4,4,4,4,4, 
+            NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,
+            NA,NA,NA,NA,NA,NA,NA,NA,NA,NA, 
+            5, 5),
+    figure = c(NA,NA,NA,NA,NA,NA,NA, 
+            3,3,3,3,3,3,3,3,3,3, 
+            2,2,2,2,2,2,2,2,2,2, 
+            NA, NA),
+    panel = c("a", "b", "a", "b", "c", "d", "e",
+            "labor", "public", "development", "political", "finance", "experimental", "behavioral", "theory", "macro", "econometrics", 
+            "male", "female", "phd", "prof", "editor", "noeditor", "highcite", "lowcite", "topfive", "notopfive", 
+            "a", "b"),
+    beta = c(-14.058, -14.474, -11.239, -14.571, -14.945, -14.320, -11.96,
+            -14.875, -13.368, -20.716, -12.202, -14.601, -12.595, -11.191, -6.617, -13.961, -14.094,
+            -13.947, -15.128, -14.082, -14.199, -15.610, -14.278, -15.714, -14.065,  -14.784, -13.817, 
+            -19.755, -18.134),
+    se = c(1.09, 1.224, 1.913, 1.465, 1.491, 1.48, 1.736, 
+            2.666, 3.182, 3.165, 2.295, 4.006, 4.297, 3.374, 4.635, 2.621, 3.018, 
+            1.241, 2.495, 2.311, 1.287, 2.707, 1.280, 1.747, 1.892, 1.866, 1.431, 
+            2.269, 2.605),
+    obs = c(1920, 1920, 1920, 1920, 1920, 1920, 1920, 
+            352, 216, 300, 280, 176, 104, 152, 112, 236, 236, 
+            1488, 420, 456, 1412, 268, 1508, 656, 656, 628, 1220, 
+            475, 475)
+)
+df_main_values["paper"] <- "main"
+
+# Create appendix list of values 
+df_appendix_values <- data.frame(
+    table = c(NA, NA, NA, NA, NA, 
+            "A1", "A1", "A1", "A1", "A1", "A1", "A1", "A1", "A1", "A1", 
+            "A2", 
+            "A3", "A3", "A3", "A3", 
+            "A5", 
+            "A6", "A6", "A6", "A6", 
+            "A7", "A7", "A7", "A7", "A7", 
+            "A8", 
+            "A9", "A9", "A9",
+            "A12", "A12", "A12", "A12"),
+    figure = c("A2", "A2", "A2", "A2", "A2", 
+            NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+            NA, 
+            NA, NA, NA, NA, 
+            NA,
+            NA, NA, NA, NA,
+            NA, NA, NA, NA, NA, 
+            NA,
+            NA, NA, NA,
+            NA, NA, NA, NA),
+    panel = c("vignette1", "vignette2", "vignette3", "vignette4", "vignette5", 
+            "a1", "a2", "a3", "a4", "a5", "b1", "b2", "b3", "b4", "b5", 
+            "1", 
+            "a", "b", "c", "d", 
+            "1",
+            "a", "b", "c", "d",
+            "a", "b", "c", "d", "e", 
+            "1",
+            "a", "b", "c",
+            "a", "b", "c", "d"),
+    beta = c(-15.249, -17.783, -11.268, -11.789, -14.295,
+            -11.754, -11.702, -12.009, -11.960, -11.161, -11.924, -11.828, -12.305, -12.193, -11.072, 
+            -15.735, 
+            -14.058, -14.131, -14.474, -14.628, 
+            -16.242, 
+            -14.058, -11.486, -15.336, -13.417, 
+            -11.239, -14.571, -14.945, -14.32, -11.96, 
+            -11.072,
+            -13.202, -13.206, -18.067,
+            -14.685, -15.518, -16.654, -16.986),
+    se = c(2.289, 2.231, 2.154, 2.266, 2.244,
+            1.783, 1.777, 1.745, 1736, 3.063, 1.585, 1.533, 1.491, 1.432, 2.681, 
+            2.232,
+            1.09, 1.286, 1.224, 1.471,
+            2.133,
+            1.09, 1.569, 2.27, 1.897,
+            1.913, 1.465, 1.491, 1.48, 1.736,
+            2.681, 
+            1.253, 1.457, 2.117,
+            1.126, 1.32, 1.575, 1.853),
+    obs = c(387, 377, 385, 389, 382,
+            1920, 1920, 1920, 1920, 1920, 1920, 1920, 1920, 1920, 1920, 
+            502,
+            480, 480, 480, 480,
+            480,
+            480, 480, 284, 348,
+            1920, 1920, 1920, 1920, 1920,
+            1920,
+            1920, 988, 566,
+            1788, 1360, 884, 640)
+)
+df_appendix_values["paper"] <- "appendix"
+
+# Append datasets denoting origin of values 
+df_values = setDT(rbind(df_main_values, df_appendix_values))
+
+# Create z-scores from values
+df_values = df_values[, zscore := abs(beta/se)]
+# Create z-curve density plot with both density and frequency on y-axis
+ggplot(df_values, aes(x = zscore)) +
+    geom_histogram(fill = "gray", color = "black", alpha = 0.4) +
+    geom_vline(xintercept = c(1.645, 1.96, 2.576), linetype = "dashed", color = "red") +
+    annotate("text", x = 1.7, y = 0, label = "*", vjust = 2, color = "red") +
+    annotate("text", x = 2.1, y = 0, label = "**", vjust = 2, color = "red") +
+    annotate("text", x = 2.7, y = 0, label = "***", vjust = 2, color = "red") +
+    labs(title = "Distribution of Z-scores",
+        x = "Z-score",
+        y = "Frequency") +
+    theme_minimal()
+# Density plot 
+ggplot(df_values, aes(x = zscore)) +
+    # geom_density(alpha = 0.5, fill = "gray") +
+    geom_density(alpha = 0.5, aes(fill = paper)) +
+    geom_vline(,xintercept = c(1.645, 1.96, 2.576), linetype = "dashed", color = "red") +
+    annotate("text", x = 1.7, y = 0, label = "*", vjust = 2, color = "red") +
+    annotate("text", x = 2.1, y = 0, label = "**", vjust = 2, color = "red") +
+    annotate("text", x = 2.7, y = 0, label = "***", vjust = 2, color = "red") +
+    labs(title = "Distribution of Z-scores",
+        x = "Z-score",
+        y = "Frequency") +
+    theme_minimal()
+```
+
+```{r}
+#| label: z-curve-robust
+#| error: false
+#| warning: false
+
+# Create list of values
+
+
+```
 
 
 # Variation in the Publishability 
@@ -222,6 +375,8 @@ Content to add here Emily:
 
 
 # Variation in Secondary Outcomes 
+
+NOTE: Worth discussing in contrast to variation in primary outcome
 
 In brief, we do not find signs of potential manipulation for the the secondary outcomes like we do for the primary outcome for publication. We examine them through similar replication of Table 3 results and exploring histograms for the secondary outcomes. These histograms are presenting the opposite relationship that was found for the primary outcome. There is considerable overlap in the original distribution -- a more reasonable generated data set. Note that z-scores are what are estimated in the paper. So I present those histograms and then show esimates of Table 3 for the secondary outcomes before and after the z-score moditification. 
 
@@ -410,7 +565,19 @@ stargazer(col2, col3, col4, col5,
 ```
 
 
+# Sample Composition 
+
+NOTE: Potentially worth discussing 
+
+- Ryan
+- Two things: include the two sample selections they edit and...
+- Remove observations that may not have salience of treatment (short and long duration or vigenette observations as well as 'finished == 0' observations)
+- Re-estimate Table 3 effects
+
+
 # Salience of Treatment 
+
+NOTE: Not worth discussing. They have appendix table on this...
 
 The treatment for the null result treatment and the cross-randomized vigenette characteristics are presented through paragraphs the reviewer reads. These are short paragraphs. But some respondents take very little time or a very long time to respond to each vigenette. Therefore, we can use the time duration for each vigenette as a measure of salience that the respondent is (1) paying attention and (2) absorbing the treatment. For example, we show what the vigenettes look like to the participants (from the online appendix). 
 
@@ -513,7 +680,6 @@ stargazer(col1,
         )) 
 ```
 
-- Create an abitrary cut off for short and long. Trim the data and re-estimate.
 Finally we consider how the result would change if we windsorize the tails of the sample. Specifically for the observations that we believe are recieving a salient treatment. These are those answering within less than 30 seconds and those answering after 10,000 seconds. This represents 2.5% and 5% of the sample, respectively. Additionally, I use a data driven winsorizing approach replacing outliers in the bottom and top 5% of the distribution with the most extreme retained values at the 5% and 95% quantiles of the original distribution for publishability. Accounting for these outliers does not change the magnitude of the effect size. 
 
 ```{r}
@@ -565,30 +731,143 @@ stargazer(col1, col2,
 
 # Data Patterns
 
-- Plotting responds by their apperance in the data
+NOTE: Not worth publishing about
 
-# P-curve and t-curve
+Plot frequency of observation values for outcomes by appearence in unsorted data. What we would be looking for a horizontal streaks. This means the the same value for the outcome measure (y axis) is being repeated. This could be evidence of fabricating the data. I am not seeing a lot of evidence that this is occurring. 
 
-- Compare to the Cochrane or economics distribution of z-scores or t-scores 
-- https://www.aeaweb.org/articles?id=10.1257/aer.20190687
-- Note that the study is underpowered -- should expect to see null effects 
+```{r}
+#| label: data-pattern-outcomes
+#| error: false
+#| warning: false
 
-- Do this for the presented results
+# Load data 
+df <- setDT(import(path_data))
 
-- Do this for the new estimated effects
+# Publish 
+ggplot(df, aes(x = id, y = publish, color = factor(id))) +
+    geom_point() +
+    labs(title = "Publishability by ID",
+         x = "ID",
+         y = "Publishability",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
 
+# Quality FOB
+ggplot(df, aes(x = id, y = qualityfob, color = factor(id))) +
+    geom_point() +
+    labs(title = "Quality FOB by ID",
+         x = "ID",
+         y = "Quality FOB",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
 
-# Sample Composition 
+# Quality SOB
+ggplot(df, aes(x = id, y = qualitysob, color = factor(id))) +
+    geom_point() +
+    labs(title = "Quality SOB by ID",
+         x = "ID",
+         y = "Quality SOB",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
 
-- Ryan
-- Two things: include the two sample selections they edit and...
-- Remove observations that may not have salience of treatment (short and long duration or vigenette observations as well as 'finished == 0' observations)
-- Re-estimate Table 3 effects
+# Importance FOB
+ggplot(df, aes(x = id, y = importancefob, color = factor(id))) +
+    geom_point() +
+    labs(title = "Importance FOB by ID",
+         x = "ID",
+         y = "Importance FOB",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+
+# Importance SOB
+ggplot(df, aes(x = id, y = importancesob, color = factor(id))) +
+    geom_point() +
+    labs(title = "Importance SOB by ID",
+         x = "ID",
+         y = "Importance SOB",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+```
+
+I also check to make sure that random assign to the many treatment groups appears randomly ordered in the data. If there are gaps in the lines between categories (e.g., either you are zero or one), then this is evidence of a streak of treatment assignments in the data. While streaks may happen randomly, we would not expect several long streaks in the data. From what I plot below, we do not observe that. 
+
+```{r}
+#| label: data-pattern-treatments
+#| error: false
+#| warning: false
+
+# Null Treatment 
+ggplot(df, aes(x = id, y = low, color = factor(id))) +
+    geom_point() +
+    labs(title = "Null Treatment by ID",
+         x = "ID",
+         y = "Null Treatment",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+
+# Field Journal Treatment 
+ggplot(df, aes(x = id, y = field, color = factor(id))) +
+    geom_point() +
+    labs(title = "Field Journal Treatment by ID",
+         x = "ID",
+         y = "Field Journal Treatment",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+
+# Professor Treatment 
+ggplot(df, aes(x = id, y = professor, color = factor(id))) +
+    geom_point() +
+    labs(title = "Professor Treatment by ID",
+         x = "ID",
+         y = "Professor Treatment",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+
+# Lower University Treatment 
+ggplot(df, aes(x = id, y = unilow, color = factor(id))) +
+    geom_point() +
+    labs(title = "Lower University Treatment by ID",
+         x = "ID",
+         y = "Lower University Treatment",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+
+# High Experimenter Forecast Treatment 
+ggplot(df, aes(x = id, y = exhigh, color = factor(id))) +
+    geom_point() +
+    labs(title = "High Experimenter Forecast Treatment by ID",
+         x = "ID",
+         y = "High Experimenter Forecast Treatment",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+
+# Low Experimenter Forecast Treatment 
+ggplot(df, aes(x = id, y = exlow, color = factor(id))) +
+    geom_point() +
+    labs(title = "Low Experimenter Forecast Treatment by ID",
+         x = "ID",
+         y = "Low Experimenter Forecast Treatment",
+         color = "ID") +
+    theme_minimal() + 
+    theme(legend.position = "none")
+```
+
 
 # Quantile Regressions 
 
-- Ryan
-- Derek might need to remind me of the motivation here...
+NOTE: Not worth discussing 
+
+Quantile regressions to see variation across deciles. We should expect treatment effects to vary. If not, this may be a sign of fabrication. The quantile regressions below suggest that this is not the case. 
 
 ```{r}
 #| label: quant-regs 
@@ -647,6 +926,8 @@ print(quant_all$coef[2,])
 
 # (Unlikely to Complete) Propensity Score Matching 
 
+NOTE: Not worth discussing
+
 - Ryan/Derek...
 - Create Propensity scores with logit 
 - Do matching 
@@ -654,5 +935,7 @@ print(quant_all$coef[2,])
 
 
 # (Minor) Median is Static 
+
+NOTE: Not worth discussing
 
 - No matter the sample difference in each randomized group, it is almost always 50. 
