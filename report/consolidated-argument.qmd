@@ -374,6 +374,41 @@ Content to add here Emily:
 - The empircal tests: kolmogorov Smirnov test 
 
 
+# Vigenette Sub-analysis
+
+```{r}
+model1 <- lm(publish ~ low +
+                  pval + field + unilow + professor + exlow + exhigh
+                , data=cleanedData[cleanedData$vignette==1,])
+summary(model1)
+
+
+model2 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==2,])
+summary(model2)
+
+
+model3 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==3,])
+summary(model3)
+
+
+model4 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==4,])
+summary(model4)
+
+
+model5 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=cleanedData[cleanedData$vignette==5,])
+summary(model5)
+```
+
+
+
 # Variation in Secondary Outcomes 
 
 NOTE: Worth discussing in contrast to variation in primary outcome
