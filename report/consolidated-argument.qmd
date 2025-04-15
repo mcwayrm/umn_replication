@@ -29,7 +29,7 @@ library(plm) # Fixed effects
 library(sandwich) # Standard errors
 library(quantreg) # Quantile regressions
 
-#########################s
+#########################
 # Directories 
 #########################
 path_data = "D:/umn_replication/original-data/data/main_study_cleaned.dta" # original data 
@@ -45,9 +45,9 @@ The direct replication was sucessful. But the paper seems almost too good to be 
 The point of the paper is the null results are penalized for publication. 
 Yet all the results, even the appendix results, have huge statistically significant effects. 
 
-This is strange get the sample. They survey economists and ask them if they would publish a paper. 
+This is strange given the sample. They survey economists and ask them if they would publish a paper. 
 This is measured on a sliding scale of 0 to 100. They provide each person with four of five vignettes. 
-The authors take the vigenttes from real studies that are statistically significant and published. 
+The authors take the vigenttes from hypothetical studies that are statistically significant. 
 They keep the standard errors the same, but randomize if they shift the coefficient left in the distribution such that the effect is now statistically insignficant. 
 
 The get a sample of 480 respondents who complete four vigenettes for 1920 observations. 
@@ -90,8 +90,8 @@ stargazer(col1,
         keep.stat = c("n", "adj.rsq"),
         model.numbers = TRUE,
         digits = 3, 
-        add.lines = list(c("Mean Dep. Var.", col1_mean)
-        )) 
+        add.lines = list(c("Mean Dep. Var.", col1_mean)),
+        out = paste0(path_out, "table3_col1.tex")) 
 ```
 
 We examine this in a couple of ways in particular. 
@@ -245,7 +245,9 @@ ggplot(df_values, aes(x = zscore)) +
     labs(title = "Distribution of Z-scores",
         x = "Z-score",
         y = "Frequency") +
-    theme_minimal()
+    theme_minimal() 
+# Save the plot
+ggsave(filename = paste0(path_out, "z-curve-density.png"), plot = last_plot(), width = 8, height = 6)
 ```
 
 ```{r}
@@ -289,11 +291,12 @@ Notably, the control and treatment distributions look like mirrors of one anothe
 # Publish by treatment
 ggplot(df, aes(x = publish, fill = factor(low))) +
     geom_density(alpha = 0.5) +
-    labs(title = "Density Plot of Publishability by Treatment",
-         x = "Likilihood to Publish",
+    labs(x = "Likilihood to Publish",
          y = "Density",
          fill = "Low") +
     theme_minimal()
+# Save the plot
+ggsave(filename = paste0(path_out, "publish-density.png"), plot = last_plot(), width = 8, height = 6)
 ```
 
 We suspect that treatment and control are the same distribution but systemtric about the middle of the range (50).
@@ -322,11 +325,22 @@ df2[, publish := ifelse(low == 1, publish, 100 - publish)]
 
 # Regular historgram by treatment
 ggplot(df, aes(publish, fill = as.factor(low))) + 
-    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)  +
+    labs(x = "Likilihood to Publish",
+         y = "Frequency",
+         fill = "Low") +
+    theme_minimal() 
+# Save the plot
+ggsave(filename = paste0(path_out, "publish-hist.png"), plot = last_plot(), width = 8, height = 6)
 # Histogram after flip the scale (e.g., are the symettric about the average (50))
 ggplot(df2, aes(publish, fill = as.factor(low))) + 
-    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1)
-    
+    geom_histogram(alpha = 0.5, position = 'dodge', binwidth = 1) +
+    labs(x = "Likilihood to Publish",
+         y = "Frequency",
+         fill = "Low") +
+    theme_minimal() 
+# Save the plot
+ggsave(filename = paste0(path_out, "publish-hist-flip.png"), plot = last_plot(), width = 8, height = 6)
     # This looks awfully symettric...
 ```
 
