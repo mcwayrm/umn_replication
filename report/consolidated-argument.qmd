@@ -31,9 +31,9 @@ library(quantreg) # Quantile regressions
 
 #########################
 # Directories 
-#########################
-path_data = "D:/umn_replication/original-data/data/main_study_cleaned.dta" # original data 
-path_out = "D:/umn_replication/outputs/" # output folder
+########################s#
+path_data = "E:/umn_replication/original-data/data/main_study_cleaned.dta" # original data 
+path_out = "E:/umn_replication/outputs/" # output folder
 
 # Load data 
 df <- setDT(import(path_data))
@@ -73,11 +73,8 @@ In addition, we are able to reproduce all the results from the replication packe
 #| warning: false
 
 # Column 1
-col1 <- plm(publish ~ low + exlow + exhigh + field + phd + unilow + pval, 
-                data = df,
-                index = c("id", "vignette"), 
-                model = "within")
-col1_se <- sqrt(diag(vcovHC(col1, type = "HC1", cluser = "id")))
+col1 <- plm(publish ~ low + exlow + exhigh + field + phd + unilow + pval, data = df, index = c("id", "vignette"), model = "within")
+col1_se <- sqrt(diag(vcovHC(col1, type = "HC1", cluster = "group")))
     # TODO: Issue with adding clustering 
 df_control <- subset(df, df$low == 0)
 col1_mean <- round(mean(df_control$publish), 3) # Subset for control
@@ -391,34 +388,76 @@ Content to add here Emily:
 # Vigenette Sub-analysis
 
 ```{r}
-model1 <- lm(publish ~ low +
-                  pval + field + unilow + professor + exlow + exhigh
-                , data=cleanedData[cleanedData$vignette==1,])
-summary(model1)
+# Change name to make stargazer work. 
+df[, treat := low]
+# OG
+col1 <- plm(publish ~ treat + exlow + exhigh + field + phd + unilow + pval, 
+                data = df,
+                index = c("id", "vignette"), 
+                model = "within")
+col1_se <- sqrt(diag(vcovHC(col1, type = "HC1", cluster = "group")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df, df$low == 0)
+col1_mean <- round(mean(df_control$publish), 3) # Subset for control
 
 
-model2 <- lm(publish ~ low +
-               pval + field + unilow + professor + exlow + exhigh
-             , data=cleanedData[cleanedData$vignette==2,])
-summary(model2)
+# Vigenette 1
+col2 <- lm(publish ~ treat + exlow + exhigh + field + phd + unilow + pval + id, 
+                data = df[df$vignette == 1,])
+col2_se <- sqrt(diag(vcovHC(col2, type = "HC1", cluster = "group")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df, df$vignette == 1 & df$low == 0)
+col2_mean <- round(mean(df_control$publish), 3) # Subset for control
 
 
-model3 <- lm(publish ~ low +
-               pval + field + unilow + professor + exlow + exhigh
-             , data=cleanedData[cleanedData$vignette==3,])
-summary(model3)
+# Vigenette 2
+col3 <- lm(publish ~ treat + exlow + exhigh + field + phd + unilow + pval + id, 
+                data = df[df$vignette == 2,])
+col3_se <- sqrt(diag(vcovHC(col3, type = "HC1", cluster = "group")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df, df$vignette == 2 & df$low == 0)
+col3_mean <- round(mean(df_control$publish), 3) # Subset for control
 
 
-model4 <- lm(publish ~ low +
-               pval + field + unilow + professor + exlow + exhigh
-             , data=cleanedData[cleanedData$vignette==4,])
-summary(model4)
+# Vigenette 3
+col4 <- lm(publish ~ treat + exlow + exhigh + field + phd + unilow + pval + id, 
+                data = df[df$vignette == 3,])
+col4_se <- sqrt(diag(vcovHC(col4, type = "HC1", cluster = "group")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df, df$vignette == 3 & df$low == 0)
+col4_mean <- round(mean(df_control$publish), 3) # Subset for control
 
 
-model5 <- lm(publish ~ low +
-               pval + field + unilow + professor + exlow + exhigh
-             , data=cleanedData[cleanedData$vignette==5,])
-summary(model5)
+# Vigenette 4
+col5 <- lm(publish ~ treat + exlow + exhigh + field + phd + unilow + pval + id, 
+                data = df[df$vignette == 4,])
+col5_se <- sqrt(diag(vcovHC(col5, type = "HC1", cluster = "group")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df, df$vignette == 4 & df$low == 0)
+col5_mean <- round(mean(df_control$publish), 3) # Subset for control
+
+
+# Vigenette 5
+col6 <- lm(publish ~ treat + exlow + exhigh + field + phd + unilow + pval + id, 
+                data = df[df$vignette == 5,])
+col6_se <- sqrt(diag(vcovHC(col5, type = "HC1", cluster = "group")))
+    # TODO: Issue with adding clustering 
+df_control <- subset(df, df$vignette == 5 & df$low == 0)
+col6_mean <- round(mean(df_control$publish), 3) # Subset for control
+
+
+# Present 
+stargazer(col1, col2, col3, col4, col5, col6,
+        type = "text", 
+        keep = c("treat"),
+        covariate.labels = c("Null result treatment"),
+        se = list(col1_se, col2_se, col3_se, col4_se, col5_se, col6_se), 
+        keep.stat = c("n", "adj.rsq"),
+        model.numbers = TRUE,
+        digits = 3, 
+        add.lines = list(c("Mean Dep. Var.", col1_mean, col2_mean, col3_mean, col4_mean, col5_mean, col6_mean),
+                            c("Vigenettes", "All", "1st", "2nd", "3rd", "4th", "5th")),
+        out = paste0(path_out, "table3_vigenettes.tex")) 
 ```
 
 
