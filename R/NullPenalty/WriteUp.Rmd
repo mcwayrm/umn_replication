@@ -1,0 +1,84 @@
+---
+title: "Mini Write Up"
+author: "Emily Kurtz"
+date: "2025-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r mainRep}
+library(haven) #package needed to read in dta files
+setwd("~/GitHub/umn_replication/original-data/data")
+data <- data.frame(read_dta("main_study_cleaned.dta"))
+
+#mainModel <- lm(publish ~ low +
+#                pval + field + unilow + professor + exlow + exhigh
+#                + vignette
+#                + as.factor(id)
+#                , data=data)
+#summary(mainModel)
+```
+
+Following the meeting with Ryan, Emily, Derek, and Abel, I came away with three actions that I would pursue in order to either further convince Abel that these data were fabricated or assuage our fears. These goals are explored in their own, individual sections below.
+
+## Order of Data
+
+First, Abel suggested we simply look at the data, in order, to see if it looks fake. By this, he meant that it would be suspicious if, for example, many 70s appear in a row. One way I can think of to quickly see if this is the case is to plot the index on the x axis and the value on the y axis for each of the five vignettes. I do this below.
+
+
+```{r cars}
+valueByIndex <- subset(data, select=c(publish, vignette, id))
+valueByIndex <- reshape(valueByIndex, idvar="id", timevar="vignette", direction="wide")
+plot(valueByIndex$id, valueByIndex$publish.1, xlab="Index", ylab="Score for Vignette 1")
+plot(valueByIndex$id, valueByIndex$publish.2, xlab="Index", ylab="Score for Vignette 2")
+plot(valueByIndex$id, valueByIndex$publish.3, xlab="Index", ylab="Score for Vignette 3")
+plot(valueByIndex$id, valueByIndex$publish.4, xlab="Index", ylab="Score for Vignette 4")
+plot(valueByIndex$id, valueByIndex$publish.5, xlab="Index", ylab="Score for Vignette 5")
+```
+
+## QQ Plot
+
+```{r qq}
+qqplot(data$publish[data$low==1], (100-data$publish[data$low==0]), xlab="Score for Significant Treatment",
+       ylab="100 - Score for Insignificant Treatment", main="Quantile Plot")
+```
+
+## Models for the Individual Vignettes
+
+I run the models for each of the five vignettes individually to see if all still have significant findings as per Abel's suggestion.
+
+```{r indFindings}
+model1 <- lm(publish ~ low +
+                  pval + field + unilow + professor + exlow + exhigh
+                , data=data[data$vignette==1,])
+summary(model1)
+
+
+model2 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=data[data$vignette==2,])
+summary(model2)
+
+
+model3 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=data[data$vignette==3,])
+summary(model3)
+
+
+model4 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=data[data$vignette==4,])
+summary(model4)
+
+
+model5 <- lm(publish ~ low +
+               pval + field + unilow + professor + exlow + exhigh
+             , data=data[data$vignette==5,])
+summary(model5)
+```
+
+
