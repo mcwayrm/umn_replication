@@ -15,10 +15,10 @@ set cformat %5.3f
 
 * USER INPUT: Set your user name here and the path to the root of the replication package
 if "$user" == "ryanm"{
-	global dirpath "D:\umn_replication\original-data"		
+	global dirpath "E:\umn_replication\original-data"		
 }
 // Hard coded so I can use the external hard-drive 
-global dirpath "D:\umn_replication\original-data"
+global dirpath "E:\umn_replication\original-data"
 
 * -------------           Common paths                   ---------------------------
 

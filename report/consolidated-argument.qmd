@@ -318,7 +318,12 @@ $$
 
 # Histogram overlaying control onto treatment
 df2 <- data.table::copy(df)
-df2[, publish := ifelse(low == 1, publish, 100 - publish)]
+df2[, publish := ifelsse(low == 1, publish, 100 - publish)]
+
+# K-S Test 
+ks <- ks.test(df$publish[df$low == 1], df2$publish[df$low == 0])
+# Follows a beta distribution 
+beta <- dbeta(df2$publish, 2, 5)
 
 # Regular historgram by treatment
 ggplot(df, aes(publish, fill = as.factor(low))) + 
