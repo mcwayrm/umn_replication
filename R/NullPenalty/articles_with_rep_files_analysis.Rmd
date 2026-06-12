@@ -1,0 +1,118 @@
+---
+title: "Brodeur et. al. Journal Articles - Data Repositories, Replication Files, APIs"
+author: "Emily Kurtz"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries and Data
+
+```{r}
+library(haven)
+library(tidyverse)
+library(rvest)
+library(httr2)
+brodeur <- read_dta("MM Data.dta")
+```
+
+## Some Clean Up
+
+```{r}
+# i should remove quotes, special characters, etc. from brodeur titles (or all columns?) before I even do anything else here
+brodeur_articles <- brodeur %>%
+  select(c(year:article, title)) %>%
+  distinct() %>%
+  mutate(title = str_replace_all(title, "\n", " "))
+glimpse(brodeur_articles)
+```
+
+## General Set Up for API Work
+
+```{r}
+papers <- brodeur_articles$title
+```
+
+
+## Zenodo API
+
+```{r}
+my_key <- readLines("zenodo_api_key.txt") # don't think i even need
+# Loop over all articles
+for(i in 8:nrow(brodeur_articles)) {
+#for(i in 1:5) {
+  # Respect zenodo rate limit of 60/minute
+  if(i%%60) Sys.sleep(60)
+  
+  # Extract article title
+  title <- brodeur_articles$title[i]
+  
+  # Generate request URL
+  zenodo_request <- request("https://zenodo.org/api") %>%
+    req_url_path_append("records") %>%
+    req_url_query(q = title)%>%
+    req_url_query(sort = "bestmatch", size = 1)
+  
+  # Pull Data
+  zenodo <- req_perform(zenodo_request)
+  #zenodo
+  
+  # Flatten and extract resulting datasets
+  zenodo_tbl <- zenodo %>%
+    resp_body_json(simplifyVector = TRUE, flatten = TRUE)
+
+  results <- zenodo_tbl$hits$hits #$title, $doi_url, etc. just pull first one? was there a query to just pull first hit i feel like there was?
+  if(length(results)==0) {
+    brodeur_articles[i, 'zenCount'] <- 0
+    next
+  }
+  datasets <- results[results$metadata.resource_type.type == 'dataset',]
+  
+  # Pick the first result that matches the article's title
+  dataset <- datasets[grepl(title, datasets$title, ignore.case = TRUE),][1,]
+  
+  # Store findings
+  brodeur_articles[i, 'zenURL'] <- dataset$doi_url
+  brodeur_articles[i, 'zenName'] <- dataset$title
+  #brodeur_articles[i, 'zenCount'] <- nrow(datasets)
+}
+```
+
+## Dataverse API
+
+```{r}
+for(i in 1:length(papers)){
+print(i)
+# Format request
+  dataverse_request <- request("https://dataverse.harvard.edu/api") %>%
+  req_url_path_append("search") %>%
+  req_url_query(q = papers[i]) %>%
+  req_url_query(sort = "score", type = "dataset", per_page = 1)
+  
+# Perform request, flatten
+  dataverse_tbl <- req_perform(dataverse_request) %>%
+    resp_body_json(simplifyVector = TRUE, flatten = TRUE)
+  
+# Skip if no results
+  if(length(dataverse_tbl$data$items) == 0){
+    next
+  }
+  
+# Extract results of interest
+  dataset <- dataverse_tbl$data$items %>%
+    select(c(name, url))
+
+# Store findings
+  brodeur_articles[i, 'dvURL'] <- dataset$url
+  brodeur_articles[i, 'dvName'] <- dataset$name
+}
+```
+
+## ICPSR API
+
+## Fuzzy Text Matching to See if Hits are Actually Relevant
+
+

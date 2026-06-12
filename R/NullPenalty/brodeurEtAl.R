@@ -1,3 +1,12 @@
+# data repositories in econ:
+# https://www.icpsr.umich.edu/sites/aea/home
+# harvard dataverse
+# https://www.icpsr.umich.edu/sites/icpsr/find-data
+# zenodo
+
+
+
+
 library(haven)
 data <- as.data.frame(read_dta("MM Data.dta"))
 head(data)
@@ -9,7 +18,7 @@ subdata <- data[data$method=="RCT"&data$t>7,]
 uniquePapers <- unique(subdata$title)
 write.csv(uniquePapers, "EconPapersWithLargeZ.csv")
 set.seed(21740)
-sample(uniquePapers, 10)
+sample(uniquePapers, 10) # first one, for example, contained in harvard dataverse - https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/90WZHM
 # or I can use the papers with JEL codes B4X or D8X - get from abstract here: https://papers.ssrn.com/sol3/DisplayAbstractSearch.cfm
 # or click browse by jel code
 
