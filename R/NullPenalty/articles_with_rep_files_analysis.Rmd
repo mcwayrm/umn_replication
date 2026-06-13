@@ -16,6 +16,9 @@ library(haven)
 library(tidyverse)
 library(rvest)
 library(httr2)
+library(RSelenium)
+library(stringdist)
+library(fuzzyjoin)
 brodeur <- read_dta("MM Data.dta")
 ```
 
@@ -40,44 +43,50 @@ papers <- brodeur_articles$title
 ## Zenodo API
 
 ```{r}
-my_key <- readLines("zenodo_api_key.txt") # don't think i even need
-# Loop over all articles
-for(i in 8:nrow(brodeur_articles)) {
-#for(i in 1:5) {
-  # Respect zenodo rate limit of 60/minute
-  if(i%%60) Sys.sleep(60)
-  
-  # Extract article title
-  title <- brodeur_articles$title[i]
-  
-  # Generate request URL
+# test example
   zenodo_request <- request("https://zenodo.org/api") %>%
     req_url_path_append("records") %>%
-    req_url_query(q = title)%>%
-    req_url_query(sort = "bestmatch", size = 1)
+    req_url_query(q = "null result penalty")%>%
+    req_url_query(sort = "bestmatch", size = 1, type = "dataset")
   
   # Pull Data
   zenodo <- req_perform(zenodo_request)
-  #zenodo
   
   # Flatten and extract resulting datasets
   zenodo_tbl <- zenodo %>%
     resp_body_json(simplifyVector = TRUE, flatten = TRUE)
 
   results <- zenodo_tbl$hits$hits #$title, $doi_url, etc. just pull first one? was there a query to just pull first hit i feel like there was?
-  if(length(results)==0) {
-    brodeur_articles[i, 'zenCount'] <- 0
+  glimpse(results)
+```
+
+```{r}
+#my_key <- readLines("zenodo_api_key.txt") # don't think i even need
+# Loop over all articles
+for(i in 625:length(papers)) {
+  print(i)
+  # Respect zenodo rate limit of 60/minute
+  if(i%%30 == 0) Sys.sleep(60)
+  # 314, 490, 540, 624 seemed to have a bug = 500 internal server error
+  
+  # Generate request URL
+  zenodo_request <- request("https://zenodo.org/api") %>%
+    req_url_path_append("records") %>%
+    req_url_query(q = papers[i])%>%
+    req_url_query(sort = "bestmatch", type = "dataset", size = 1)
+  
+  # Flatten and extract resulting datasets
+  zenodo_tbl <- req_perform(zenodo_request) %>%
+    resp_body_json(simplifyVector = TRUE, flatten = TRUE)
+
+  dataset <- zenodo_tbl$hits$hits #$title, $doi_url, etc. just pull first one? was there a query to just pull first hit i feel like there was?
+  if(length(dataset)==0) {
     next
   }
-  datasets <- results[results$metadata.resource_type.type == 'dataset',]
-  
-  # Pick the first result that matches the article's title
-  dataset <- datasets[grepl(title, datasets$title, ignore.case = TRUE),][1,]
   
   # Store findings
   brodeur_articles[i, 'zenURL'] <- dataset$doi_url
   brodeur_articles[i, 'zenName'] <- dataset$title
-  #brodeur_articles[i, 'zenCount'] <- nrow(datasets)
 }
 ```
 
@@ -111,8 +120,88 @@ print(i)
 }
 ```
 
-## ICPSR API
+## ICPSR Collection
+
+I tried to use the `icpsrdata` R package, but it seems to require a file_id. So we will scrape the old fashioned way.
+
+```{r}
+
+```
 
 ## Fuzzy Text Matching to See if Hits are Actually Relevant
+
+Matching zenName and dvName to title in brodeur_articles
+
+```{r}
+my_custom_words <- c("replication", "data") 
+
+# 3. Create a robust text-cleaning function
+clean_text <- function(text, custom_stopwords = c()) {
+  if (is.null(text)) return(NA)
+  
+  text %>%
+    # Convert to lowercase
+    str_to_lower() %>%
+    # Remove quotation marks (both straight and curly)
+    str_replace_all('[\'""`‘’“”]', "") %>%
+    # Remove other "weird" symbols and punctuation (keep alphanumeric and spaces)
+    str_replace_all("[^[:alnum:][:space:]]", " ") %>%
+    # Replace multiple spaces/newlines with a single space
+    str_replace_all("\\s+", " ") %>%
+    # Trim leading and trailing spaces
+    str_trim() %>%
+    # Remove standard English stop words and custom words
+    # (Using regex boundaries \\b to ensure we only match whole words)
+    str_remove_all(paste0("\\b(", paste(c(tidytext::stop_words$word, custom_stopwords), collapse = "|"), ")\\b")) %>%
+    # Clean up any extra spaces left over after removing words
+    str_replace_all("\\s+", " ") %>%
+    str_trim()
+}
+
+# 5. Clean strings and calculate fuzzy match percentage
+df_matched <- brodeur_articles %>%
+  # Create temporary clean columns for a fair comparison
+  mutate(
+    clean_dv = clean_text(dvName, my_custom_words),
+    clean_zen = clean_text(zenName, my_custom_words),
+    clean_title = clean_text(title, my_custom_words)
+  ) %>%
+  # Calculate the match score
+  mutate(
+    # Jaro-Winkler (jw) outputs a distance between 0 and 1. 
+    # 0 = perfect match, 1 = completely different.
+    # We subtract from 1 to turn it into a "similarity" percentage (e.g., 1 = 100% match).
+    dvMatch = 1 - stringdist(clean_dv, clean_title, method = "jw"),
+    zenMatch = 1 - stringdist(clean_zen, clean_title, method = "jw"),
+  ) %>%
+  # Drop the temporary clean columns so your final dataset stays neat
+  select(-clean_dv, -clean_title, -clean_zen)
+
+
+hist(df_matched$dvMatch)
+
+df_matched %>%
+  ggplot(aes(x = dvMatch)) +
+  geom_histogram() +
+  theme_minimal() +
+  labs(x = "Harvard Dataverse Fuzzy Match Score", title = "Histogram of Fuzzy Match Scores from Harvard Dataverse Top Hits")
+
+ggsave("harvardfuzzymatch.png", width = 7, height = 4)
+
+df_matched %>%
+  ggplot(aes(x = zenMatch)) +
+  geom_histogram() +
+  theme_minimal() +
+  labs(x = "Zenodo Fuzzy Match Score", title = "Histogram of Fuzzy Match Scores from Zenodo Top Hits")
+
+ggsave("zenodofuzzymatch.png", width = 7, height = 4)
+
+sum(!is.na(brodeur_articles$zenName))
+
+hist(df_matched$zenMatch)
+sum(df_matched$dvMatch > 0.795, na.rm=T)
+
+#write.csv(df_matched, "articlesWithMatchesTemp.csv")
+```
 
 
