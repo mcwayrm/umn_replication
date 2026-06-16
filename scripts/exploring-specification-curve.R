@@ -104,7 +104,7 @@ axis_layout <- bind_rows(header_levels, option_levels %>% select(choice, y_level
 
 label_exprs <- lapply(seq_len(nrow(axis_layout)), function(i) {
     if (axis_layout$order_in_choice[i] == 0L) {
-        bquote(bold(.(axis_layout$y_label[i])))
+        bquote(bold(underline(.(axis_layout$y_label[i]))))
     } else {
         bquote(.(paste0("  ", axis_layout$y_label[i])))
     }
@@ -134,7 +134,7 @@ p_specs <- ggplot(specs_rows, aes(x = rank, y = y_pos)) +
         panel.grid.minor = element_blank(),
         plot.margin = margin(5.5, 5.5, 5.5, 20)
     ) +
-    labs(y = "Analytical Choice", x = "Specification Rank")
+    labs(y = "Analytical Choice", x = "Specificastion Rank")
 p_specs
 
 # Combine the plots
@@ -148,3 +148,4 @@ combined_plot <- patchwork::wrap_plots(
 combined_plot
 # Save the plot
 ggsave(filename = paste0(path_out, "spec-curve.png"), plot = last_plot(), width = 8, height = 6)
+
