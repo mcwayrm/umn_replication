@@ -1,0 +1,60 @@
+---
+title: "Actual Analysis"
+author: "Emily Kurtz"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(haven)
+library(tidyverse)
+rep_data <- read_csv("articlesWithMatches.csv") %>%
+  select(-...1) %>%
+  mutate(dvMatch = case_when(
+    dvMatch > 0.795 ~ 1,
+    dvMatch <= 0.795 ~ 0,
+    .default = 0
+  ), icpsrMatch = case_when(
+    icpsrMatch > 0.99 ~ 1,
+    icpsrMatch <= 0.99 ~ 0,
+    .default = 0
+  ), zenMatch = case_when(
+    zenMatch > 0 ~ 0,
+    .default = 0
+  ), anyMatch = ifelse(
+    dvMatch == 1 | icpsrMatch == 1 | zenMatch == 1, 1, 0
+  ))
+summary(rep_data$anyMatch)
+orig_data <- read_dta("MM Data.dta")
+joined_data <- orig_data %>%
+  left_join(rep_data, by = c("year", "journal", "article", "title"))
+glimpse(joined_data)
+joined_data <- joined_data %>%
+  mutate(anyMatch = ifelse(is.na(anyMatch), 0, anyMatch))
+```
+
+
+
+
+
+```{r}
+hist(joined_data$t)
+t_sum <- summary(joined_data$t)
+iqr <- t_sum[5] - t_sum[2]
+upper_bound <- t_sum[5] + 1.5*iqr
+
+sub_data <- joined_data[joined_data$t < upper_bound, ]
+t.test(sub_data$t ~ sub_data$anyMatch)
+```
+
+
+```{r}
+rep_data %>%
+  ggplot(aes(x = as.factor(year), fill = anyMatch)) +
+  geom_bar(position = "fill")
+```

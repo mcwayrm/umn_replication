@@ -19,6 +19,7 @@ library(httr2)
 library(RSelenium)
 library(stringdist)
 library(fuzzyjoin)
+library(jsonlite)
 brodeur <- read_dta("MM Data.dta")
 ```
 
@@ -63,7 +64,7 @@ papers <- brodeur_articles$title
 ```{r}
 #my_key <- readLines("zenodo_api_key.txt") # don't think i even need
 # Loop over all articles
-for(i in 625:length(papers)) {
+for(i in 1:length(papers)) {
   print(i)
   # Respect zenodo rate limit of 60/minute
   if(i%%30 == 0) Sys.sleep(60)
@@ -94,6 +95,7 @@ for(i in 625:length(papers)) {
 
 ```{r}
 for(i in 1:length(papers)){
+  #482, 483
 print(i)
 # Format request
   dataverse_request <- request("https://dataverse.harvard.edu/api") %>%
@@ -118,6 +120,8 @@ print(i)
   brodeur_articles[i, 'dvURL'] <- dataset$url
   brodeur_articles[i, 'dvName'] <- dataset$name
 }
+
+#write.csv(brodeur_articles, "articlesWithMatchesTemp.csv")
 ```
 
 ## ICPSR Collection
@@ -125,7 +129,73 @@ print(i)
 I tried to use the `icpsrdata` R package, but it seems to require a file_id. So we will scrape the old fashioned way.
 
 ```{r}
+get_icpsr_scrape <- function(search_term) {
+  
+  encoded_term <- utils::URLencode(search_term)
+  
+  target_url <- paste0(
+    "https://www.icpsr.umich.edu/sites/icpsr/search/studies?fq=ARCHIVE%3Aopenicpsr&q=", 
+    encoded_term
+  )
+  
+  tryCatch({
+    # Build request using httr2 with realistic browser signatures
+    req <- httr2::request(target_url) %>% 
+      httr2::req_timeout(15) %>% 
+      httr2::req_headers(
+        `User-Agent` = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        `Accept` = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        `Accept-Language` = "en-US,en;q=0.5"
+      )
+    
+    # Perform the request
+    resp <- httr2::req_perform(req)
+    
+    # Read the HTML body directly from the response object
+    page <- httr2::resp_body_html(resp)
+    
+    # Look for the links that contain study identifiers
+    top_hit_link <- page %>% 
+      rvest::html_element("a[href*='/icpsrweb/ICPSR/studies/'], a[href*='/openicpsr/project/']")
+    
+    # If no matching elements are found, return empty strings
+    if (length(top_hit_link) == 0 || is.na(top_hit_link)) {
+      return(data.frame(icpsrTitle = NA_character_, icpsrURL = NA_character_))
+    }
+    
+    # Extract text and relative URL
+    title <- top_hit_link %>% rvest::html_text(trim = TRUE)
+    relative_url <- top_hit_link %>% rvest::html_attr("href")
+    
+    # Standardize the absolute path
+    full_url <- if (stringr::str_starts(relative_url, "http")) {
+      relative_url
+    } else {
+      paste0("https://www.icpsr.umich.edu", relative_url)
+    }
+    
+    return(data.frame(icpsrTitle = title, icpsrURL = full_url, stringsAsFactors = FALSE))
+    
+  }, error = function(e) {
+    warning(paste("Error scraping for:", search_term, "-", e$message))
+    return(data.frame(icpsrTitle = NA_character_, icpsrURL = NA_character_))
+  })
+}
 
+
+
+icpsr_results <- papers %>% 
+  map_dfr(~ {
+    Sys.sleep(1.5) 
+    get_icpsr_scrape(.x)
+  })
+
+
+
+# Store findings
+  brodeur_articles['icpsrURL'] <- icpsr_results$icpsrURL
+  brodeur_articles['icpsrName'] <- icpsr_results$icpsrTitle
+#write.csv(brodeur_articles, "articlesWithICPSR.csv")
 ```
 
 ## Fuzzy Text Matching to See if Hits are Actually Relevant
@@ -164,6 +234,7 @@ df_matched <- brodeur_articles %>%
   mutate(
     clean_dv = clean_text(dvName, my_custom_words),
     clean_zen = clean_text(zenName, my_custom_words),
+    clean_icpsr = clean_text(icpsrName, my_custom_words),
     clean_title = clean_text(title, my_custom_words)
   ) %>%
   # Calculate the match score
@@ -173,12 +244,17 @@ df_matched <- brodeur_articles %>%
     # We subtract from 1 to turn it into a "similarity" percentage (e.g., 1 = 100% match).
     dvMatch = 1 - stringdist(clean_dv, clean_title, method = "jw"),
     zenMatch = 1 - stringdist(clean_zen, clean_title, method = "jw"),
+    icpsrMatch = 1 - stringdist(clean_icpsr, clean_title, method = "jw")
   ) %>%
   # Drop the temporary clean columns so your final dataset stays neat
-  select(-clean_dv, -clean_title, -clean_zen)
+  select(-clean_dv, -clean_title, -clean_zen, clean_icpsr)
+
+
+#write.csv(df_matched, "articlesWithMatches.csv")
 
 
 hist(df_matched$dvMatch)
+hist(df_matched$icpsrMatch)
 
 df_matched %>%
   ggplot(aes(x = dvMatch)) +
@@ -199,9 +275,21 @@ ggsave("zenodofuzzymatch.png", width = 7, height = 4)
 sum(!is.na(brodeur_articles$zenName))
 
 hist(df_matched$zenMatch)
-sum(df_matched$dvMatch > 0.795, na.rm=T)
-
-#write.csv(df_matched, "articlesWithMatchesTemp.csv")
+sum(df_matched$dvMatch > 0.795 | df_matched$icpsrMatch > 0.99, na.rm=T)
+sum(df_matched$dvMatch > 0.795 & df_matched$icpsrMatch > 0.99, na.rm=T) # 32 stored in both repos?
+df_matched[df_matched$dvMatch > 0.795 & df_matched$icpsrMatch > 0.99 & !is.na(df_matched$dvMatch) & !is.na(df_matched$icpsrMatch), ]
 ```
 
+## Prevalance Over Time
 
+```{r}
+df_matched <- df_matched %>%
+  mutate(rep_files_exist = case_when(
+    dvMatch >= 0.795 ~ 1,
+    dvMatch >= 0 ~ 0,
+    .default = NA
+  ))
+
+df_joined <- brodeur %>%
+  left_join(df_matched, by = "title")
+```
