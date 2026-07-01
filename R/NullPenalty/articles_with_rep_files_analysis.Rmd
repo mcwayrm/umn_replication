@@ -20,6 +20,7 @@ library(RSelenium)
 library(stringdist)
 library(fuzzyjoin)
 library(jsonlite)
+library(patchwork)
 brodeur <- read_dta("MM Data.dta")
 ```
 
@@ -203,6 +204,7 @@ icpsr_results <- papers %>%
 Matching zenName and dvName to title in brodeur_articles
 
 ```{r}
+brodeur_articles <- read.csv("articlesWithICPSR.csv")
 my_custom_words <- c("replication", "data") 
 
 # 3. Create a robust text-cleaning function
@@ -255,22 +257,38 @@ df_matched <- brodeur_articles %>%
 
 hist(df_matched$dvMatch)
 hist(df_matched$icpsrMatch)
+hist(df_matched$zenMatch)
 
-df_matched %>%
+p1 <- df_matched %>%
   ggplot(aes(x = dvMatch)) +
-  geom_histogram() +
+  geom_histogram(binwidth = 0.05) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 200)) +
   theme_minimal() +
-  labs(x = "Harvard Dataverse Fuzzy Match Score", title = "Histogram of Fuzzy Match Scores from Harvard Dataverse Top Hits")
+  labs(x = "", title = "Harvard Dataverse")
 
-ggsave("harvardfuzzymatch.png", width = 7, height = 4)
+#ggsave("harvardfuzzymatch.png", width = 7, height = 4)
 
-df_matched %>%
+p2 <- df_matched %>%
+  ggplot(aes(x = icpsrMatch)) +
+  geom_histogram(binwidth = 0.05) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 200)) +
+  theme_minimal() +
+  labs(x = "", y = "", title = "Open ICPSR")
+
+p3 <- df_matched %>%
   ggplot(aes(x = zenMatch)) +
-  geom_histogram() +
+  geom_histogram(binwidth = 0.05) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 200)) +
   theme_minimal() +
-  labs(x = "Zenodo Fuzzy Match Score", title = "Histogram of Fuzzy Match Scores from Zenodo Top Hits")
+  labs(x = "", y="", title = "Zenodo")
 
-ggsave("zenodofuzzymatch.png", width = 7, height = 4)
+p1+p2+p3 +
+  plot_annotation(
+    title = "Jaro-Winkler Distances between Best Match and Article Title",
+    tag_levels = "A"
+  )
+
+ggsave("histogram.png", width = 7, height = 4)
 
 sum(!is.na(brodeur_articles$zenName))
 
