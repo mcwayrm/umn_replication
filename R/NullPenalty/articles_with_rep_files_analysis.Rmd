@@ -298,7 +298,7 @@ sum(df_matched$dvMatch > 0.795 & df_matched$icpsrMatch > 0.99, na.rm=T) # 32 sto
 df_matched[df_matched$dvMatch > 0.795 & df_matched$icpsrMatch > 0.99 & !is.na(df_matched$dvMatch) & !is.na(df_matched$icpsrMatch), ]
 ```
 
-## Prevalance Over Time
+## t test
 
 ```{r}
 df_matched <- df_matched %>%
@@ -310,4 +310,9 @@ df_matched <- df_matched %>%
 
 df_joined <- brodeur %>%
   left_join(df_matched, by = "title")
+df_joined$rep_files_exist[is.na(df_joined$rep_files_exist)] <- 0
+
+summary(df_joined$rep_files_exist)
+
+summary(df_joined$t_orig)
 ```
